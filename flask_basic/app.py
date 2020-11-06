@@ -8,6 +8,7 @@ from flask import Flask, request, redirect, jsonify, url_for
 from utils.converter import RegexConverter
 from config.config import Config
 from utils.status_code import response_code
+from utils.common import login_check
 
 
 app = Flask(__name__)
@@ -72,6 +73,7 @@ def index():
 
 
 @app.route('/users')
+@login_check
 def get_users():
     users = User.query.all()
     if users:
@@ -94,13 +96,14 @@ def get_books():
 
 @app.route('/books/<book_id>', methods=['POST'])
 def get_book(book_id):
-    book = Book.query.get(id=book_id)
+    book = Book.query.get(book_id)
     if book:
         return jsonify(response_code.get_data_success([book.to_dict()]))
     return jsonify(response_code.get_data_fail)
 
 
 @app.route('/books/add', methods=['POST'])
+@login_check
 def add():
     data = request.json
     name = data.get('name')
@@ -116,22 +119,46 @@ def add():
 
 @app.route('/books/<book_id>')
 def book_info(book_id):
-    book = Book.query.get(id=book_id)
+    book = Book.query.get(book_id)
     return jsonify(book)
 
 
 # Update
 @app.route('/books/<book_id>/update', methods=['POST'])
+@login_check
 def update(book_id):
+    data = request.json
+    name = data.get('name')
+    category = data.get('category')
+    price = data.get('price')
+
+    book = Book.query.get(book_id)
+    if book:
+        if name:
+            book.name = name
+        if category:
+            book.category = category
+
+        if price:
+            book.price = price
+        book.update()
+
+        book = Book.query.get(book_id)
+        return jsonify(response_code.update_success(book.to_dict()))
+    return jsonify(response_code.get_data_fail)
+
     pass
 
 
 # Delete
-@app.route('/<book_id>/delete', methods=['POST'])
+@app.route('/books/<book_id>/delete', methods=['POST'])
+@login_check
 def delete(book_id):
-    book = Book.query.get(id=book_id)
+    book = Book.query.get(book_id)
     if book:
         book.delete()
+        return jsonify(response_code.success)
+    return jsonify(response_code.add_data_fail)
 
 
 if __name__ == "__main__":
