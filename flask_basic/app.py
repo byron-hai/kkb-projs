@@ -5,11 +5,9 @@
 
 
 from flask import Flask, request, redirect, jsonify, url_for
-from sqlalchemy import and_
-
 from utils.converter import RegexConverter
 from config.config import Config
-from utils.status_code import Response_code
+from utils.status_code import response_code
 
 
 app = Flask(__name__)
@@ -19,34 +17,48 @@ app.url_map.converters['re'] = RegexConverter
 from model import User, Book, Category
 
 
-@app.route('/register', methods=['GET', 'POST'])
+@app.route('/register', methods=['POST'])
 def register():
-    if request.method == 'POST':
-        user = request.form('registerForm')
-        mobile, nickname, password = map(lambda x: user[x], ['mobile', 'name', 'passwd'])
-        user = User(mobile=mobile, nickname=nickname, passwd=password)
-        err = user.add(user)
+    data = request.json
+    mobile, nickname, password = map(lambda x: data.get(x), ['mobile', 'username', 'password'])
+    user = User(mobile=mobile, nickname=nickname, passwd=password)
+    err = user.add(user)
 
-        if not err:
-            return jsonify(Response_code.success)
-        else:
-            Response_code.user_not_exist['sql_err'] = err
-            return jsonify(Response_code.user_not_exist)
+    if not err:
+        return jsonify(response_code.success)
+    else:
+        response_code.user_not_exist['sql_err'] = err
+        return jsonify(response_code.user_not_exist)
 
 
 @app.route('/login', methods=['POST'])
 def login():
-    if request.method == 'POST':
-        info = request.form('loginForm')
-        username = info['username']
-        passwd = info['password']
+    data = request.json
+    username = data.get('username')
+    mobile = data.get('mobile')
+    password = data.get('password')
 
-        if User.query.filer_by(and_(User.nickname == username, User.password == passwd)).first():
-            pass
-        elif User.query.filter_by(User.nickname != username).first():
-            return {'code'}
-        else:
-            return
+    if all([username, password]):
+        user = User.query.get(nickname=username)
+        if user:
+            if user.check_password(password):
+                data = {'code': 200,
+                        'data': user.to_dict()}
+                return jsonify(data)
+            return jsonify(response_code.login_info_error)
+        return jsonify(response_code.user_not_exist)
+
+    elif all([mobile, password]):
+        user = User.query.get(mobile=mobile)
+        if user:
+            if user.check_password(password):
+                data = {'code': 200,
+                        'data': user.to_dict()}
+                return jsonify(data)
+            return jsonify(response_code.login_info_error)
+        return jsonify(response_code.user_not_exist)
+    else:
+        return jsonify(response_code.login_info_error)
 
 
 @app.route('/')
@@ -62,12 +74,10 @@ def index():
 @app.route('/users')
 def get_users():
     users = User.query.all()
-    data = {
-        'code': 1,
-        'msg': '用户信息获取成功',
-        'data': [user.to_dict() for user in users],
-    }
-    return jsonify(data)
+    if users:
+        users = [user.to_dict() for user in users]
+        return jsonify(response_code.get_data_success(users))
+    return jsonify(response_code.get_data_fail)
 
 
 # Books
@@ -75,27 +85,24 @@ def get_users():
 @app.route('/books')
 def get_books():
     books = Book.query.all()
-    categories = Category.query.all()
+    if books:
+        books = [book.to_dict() for book in books]
+        return jsonify(response_code.get_data_success(books))
 
-    data = {'books': [book.to_dict() for book in books],
-            'categories': [cate.to_dict() for cate in categories]}
-
-    return jsonify(data)
+    return jsonify(response_code.get_data_fail)
 
 
 @app.route('/books/<book_id>', methods=['POST'])
 def get_book(book_id):
     book = Book.query.get(id=book_id)
     if book:
-        pass
-
-    else:
-        pass
+        return jsonify(response_code.get_data_success([book.to_dict()]))
+    return jsonify(response_code.get_data_fail)
 
 
 @app.route('/books/add', methods=['POST'])
 def add():
-    data = request.json()
+    data = request.json
     name = data.get('name')
     category = data.get('category')
     price = data.get('price')
