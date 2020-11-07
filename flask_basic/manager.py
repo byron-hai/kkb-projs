@@ -12,8 +12,8 @@ from flask_migrate import Migrate, MigrateCommand
 
 
 db = SQLAlchemy(app, use_native_unicode='utf8')
-migrate = Migrate(app, db)
 manager = Manager(app)
+migrate = Migrate(app, db)
 manager.add_command('db', MigrateCommand)
 
 

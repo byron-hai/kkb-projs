@@ -20,7 +20,7 @@ class BaseModel(object):
         return session_commit()
 
     def delete(self, id):
-        self.query.filter_by(id=id).delete()
+        self.query.get(id).delete()
         return session_commit()
 
 
