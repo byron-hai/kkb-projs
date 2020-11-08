@@ -3,72 +3,78 @@
 # Date: 11/6/20
 # Author: byron
 
-
-from flask import Flask, request, redirect, jsonify, url_for
-from utils.converter import RegexConverter
-from config.config import Config
+from app_init import app, db
+from flask import request, jsonify
 from utils.status_code import response_code
 from utils.common import login_check
+from models import User, Book
 
 
-app = Flask(__name__)
-app.config.from_object(Config)
-app.url_map.converters['re'] = RegexConverter
-
-from model import User, Book, Category
-
-
-@app.route('/register', methods=['POST'])
+@app.route('/passport/register', methods=['POST'])
 def register():
     data = request.json
     mobile, nickname, password = map(lambda x: data.get(x), ['mobile', 'username', 'password'])
     user = User(mobile=mobile, nickname=nickname, passwd=password)
-    err = user.add(user)
+    user_exist = User.query.filter_by(mobile=mobile).first()
+    if user_exist:
+        return jsonify({'code': '-1', 'data': '', 'msg': "user with this name and mobile existed"})
+
+    db.session.add(user)
+    err = user.session_commit()
 
     if not err:
-        return jsonify(response_code.success)
+        user = User.query.filter_by(mobile=mobile, nickname=nickname).first()
+        return jsonify({'code': '0', 'data': user.to_dict(), 'msg': 'success'})
     else:
-        response_code.user_not_exist['sql_err'] = err
-        return jsonify(response_code.user_not_exist)
+        err_data = {
+            'code': '-1',
+            'data': err,
+            'msg': "commit data to database error"
+        }
+        return jsonify(err_data)
 
 
-@app.route('/login', methods=['POST'])
+@app.route('/passport/login', methods=['POST'])
 def login():
     data = request.json
     username = data.get('username')
     mobile = data.get('mobile')
     password = data.get('password')
 
+    status = {
+        '0': {'code': '0', 'msg': 'success', 'data': None},
+        '-1': {'code': '0', 'msg': 'user not active', 'data': ''},
+        '-2': {'code': '0', 'msg': 'password error', 'data': ''},
+        '-3': {'code': '0', 'msg': 'user not existed', 'data': ''}
+    }
+
     if all([username, password]):
-        user = User.query.get(nickname=username)
+        user = User.query.filter_by(nickname=username).first()
         if user:
             if user.check_password(password):
-                data = {'code': 200,
-                        'data': user.to_dict()}
-                return jsonify(data)
-            return jsonify(response_code.login_info_error)
-        return jsonify(response_code.user_not_exist)
+                rtn_status = status['0']
+                rtn_status['data'] = user.to_dict()
+                return jsonify(rtn_status)
+            return jsonify(status['-2'])
+        return jsonify(status['-3'])
 
     elif all([mobile, password]):
-        user = User.query.get(mobile=mobile)
+        user = User.query.filter_by(mobile=mobile).first()
         if user:
             if user.check_password(password):
-                data = {'code': 200,
-                        'data': user.to_dict()}
-                return jsonify(data)
-            return jsonify(response_code.login_info_error)
-        return jsonify(response_code.user_not_exist)
+                rtn_status = status['0']
+                rtn_status['data'] = user.to_dict()
+                return jsonify(rtn_status)
+            return jsonify(status['-2'])
+        return jsonify(status['-3'])
     else:
-        return jsonify(response_code.login_info_error)
+        return jsonify()
 
 
 @app.route('/')
 def index():
     books = Book.query.all()
-    categories = Category.query.all()
-
-    data = {'books': [book.to_dict() for book in books],
-            'categories': [cate.to_dict() for cate in categories]}
+    data = {'books': [book.to_dict() for book in books]}
     return jsonify(data)
 
 
@@ -78,8 +84,8 @@ def get_users():
     users = User.query.all()
     if users:
         users = [user.to_dict() for user in users]
-        return jsonify(response_code.get_data_success(users))
-    return jsonify(response_code.get_data_fail)
+        return jsonify({'code': '0', 'msg': 'success', 'data': users})
+    return jsonify({'code': '-1', 'msg': 'No records found', 'data': ''})
 
 
 # Books
@@ -89,43 +95,49 @@ def get_books():
     books = Book.query.all()
     if books:
         books = [book.to_dict() for book in books]
-        return jsonify(response_code.get_data_success(books))
+        return jsonify({'code': '0', 'msg': 'success', 'data': books})
 
-    return jsonify(response_code.get_data_fail)
+    return jsonify(code='-1', msg="No records found")
 
 
 @app.route('/books/<book_id>', methods=['POST'])
 def get_book(book_id):
     book = Book.query.get(book_id)
     if book:
-        return jsonify(response_code.get_data_success([book.to_dict()]))
-    return jsonify(response_code.get_data_fail)
+        return jsonify({'code': 0, 'message': 'success', 'data': book.to_dict()})
+    return jsonify({'code': '-1', 'msg': 'No records found'})
 
 
-@app.route('/books/add', methods=['POST'])
-@login_check
+@app.route('/books/book', methods=['POST'])
+# @login_check
 def add():
     data = request.json
     name = data.get('name')
     category = data.get('category')
     price = data.get('price')
-    # user_id = ""
-    user_id = ""
+    user_id = 1  # Todo: Get user_id from cookie
     book = Book(name, category, price, user_id)
-    book.add(book)
+    db.session.add(book)
+    err = book.session_commit()
 
-    return redirect(url_for('index'))
+    if not err:
+        book = Book.query.filter_by(name=name).first()
+        return jsonify({'code': '0', 'data': book.to_dict(), 'msg': 'success'})
+    return jsonify({'code': '-1', 'msg': 'add book failed', 'error': err})
 
 
-@app.route('/books/<book_id>')
+@app.route('/books/book/<int:book_id>')
 def book_info(book_id):
     book = Book.query.get(book_id)
-    return jsonify(book)
+    if book:
+        return jsonify({'code': '0', 'msg': 'success', 'data': book.to_dict()})
+    else:
+        return jsonify({'code': '-1', 'msg': 'get book info failed'})
 
 
 # Update
-@app.route('/books/<book_id>/update', methods=['POST'])
-@login_check
+@app.route('/books/book/<book_id>', methods=['PATCH'])
+# @login_check
 def update(book_id):
     data = request.json
     name = data.get('name')
@@ -138,27 +150,31 @@ def update(book_id):
             book.name = name
         if category:
             book.category = category
-
         if price:
             book.price = price
-        book.update()
+        book.session_commit()
 
         book = Book.query.get(book_id)
-        return jsonify(response_code.update_success(book.to_dict()))
+        if book:
+            return jsonify({'code': '0', 'msg': 'success', 'data': book.to_dict()})
+        return jsonify({'code': '-1', 'msg': 'update book info failed'})
     return jsonify(response_code.get_data_fail)
-
-    pass
 
 
 # Delete
-@app.route('/books/<book_id>/delete', methods=['POST'])
-@login_check
+@app.route('/books/book/<int:book_id>', methods=['DELETE'])
+# @login_check
 def delete(book_id):
     book = Book.query.get(book_id)
     if book:
-        book.delete()
-        return jsonify(response_code.success)
-    return jsonify(response_code.add_data_fail)
+        book.status = '1'
+        err = book.session_commit()
+
+        if not err:
+            book = Book.query.get(book_id)
+            return jsonify({'code': '0', 'msg': 'success', 'data': book.to_dict()})
+        return jsonify({'code': '-1', 'msg': 'delete failed'})
+    return jsonify({'code': '-1', 'msg': 'book not found'})
 
 
 if __name__ == "__main__":

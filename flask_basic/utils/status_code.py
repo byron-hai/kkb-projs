@@ -24,6 +24,10 @@ class ResponseCode(object):
         return {'code': 1001, 'msg': 'username or password error'}
 
     @property
+    def user_exist(self):
+        return {'code': 1006, 'msg': 'user existed'}
+
+    @property
     def user_not_exist(self):
         return {'code': 1007, 'msg': 'user not existed'}
 
@@ -41,7 +45,7 @@ class ResponseCode(object):
 
     @property
     def get_data_fail(self):
-        return {'code': 1014, 'msg': 'Get data failed'}
+        return {'code': 1014, 'msg': 'no data recorded'}
 
 
 response_code = ResponseCode()
