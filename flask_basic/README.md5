@@ -1,4 +1,0 @@
-#### Generate Tables
-#### python manager.py shell
-#### from model import *
-#### db.create_all()
