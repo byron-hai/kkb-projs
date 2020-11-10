@@ -74,12 +74,14 @@ def login():
 @app.route('/')
 def index():
     books = Book.query.all()
-    data = {'books': [book.to_dict() for book in books]}
-    return jsonify(data)
+    if books:
+        data = {'books': [book.to_dict() for book in books]}
+        return jsonify({'code': '0', 'msg': 'success', 'data': data})
+    return jsonify({'code': '-1', 'msg': 'no records found'})
 
 
 @app.route('/users')
-@login_check
+# @login_check
 def get_users():
     users = User.query.all()
     if users:
@@ -100,11 +102,11 @@ def get_books():
     return jsonify(code='-1', msg="No records found")
 
 
-@app.route('/books/<book_id>', methods=['POST'])
+@app.route('/books/book/<int:book_id>')
 def get_book(book_id):
     book = Book.query.get(book_id)
     if book:
-        return jsonify({'code': 0, 'message': 'success', 'data': book.to_dict()})
+        return jsonify({'code': '0', 'message': 'success', 'data': book.to_dict()})
     return jsonify({'code': '-1', 'msg': 'No records found'})
 
 
@@ -116,6 +118,11 @@ def add():
     category = data.get('category')
     price = data.get('price')
     user_id = 1  # Todo: Get user_id from cookie
+    
+    is_exist = Book.query.filter_by(name=name).first()
+    if is_exist:
+        jsonify({'code': '-1', 'msg': "Add book failed", 'error': "book with this name existed"})
+
     book = Book(name, category, price, user_id)
     db.session.add(book)
     err = book.session_commit()
@@ -126,17 +133,8 @@ def add():
     return jsonify({'code': '-1', 'msg': 'add book failed', 'error': err})
 
 
-@app.route('/books/book/<int:book_id>')
-def book_info(book_id):
-    book = Book.query.get(book_id)
-    if book:
-        return jsonify({'code': '0', 'msg': 'success', 'data': book.to_dict()})
-    else:
-        return jsonify({'code': '-1', 'msg': 'get book info failed'})
-
-
 # Update
-@app.route('/books/book/<book_id>', methods=['PATCH'])
+@app.route('/books/book/<int:book_id>', methods=['PATCH'])
 # @login_check
 def update(book_id):
     data = request.json

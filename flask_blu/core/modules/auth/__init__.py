@@ -1,9 +1,0 @@
-# -*- coding: utf-8 -*-
-# File: __init__.py.py
-# Date: 11/6/20
-# Author: byron
-
-from flask import Blueprint
-
-auth_blu = Blueprint('auth', __name__, url_prefix="/auth")
-from. import views
