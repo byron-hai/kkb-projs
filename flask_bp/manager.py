@@ -9,7 +9,7 @@ Date: 2020/11/3
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 from core import create_app, db
-from core.models import User, Book
+from core.models import User, Book, LoginUser
 
 app = create_app("development")
 migrate = Migrate(app, db)

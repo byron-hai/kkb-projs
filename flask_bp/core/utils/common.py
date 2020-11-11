@@ -16,8 +16,8 @@ def login_check(func):
         user = None
         if user_id:
             try:
-                from core.models import User
-                user = User.query.get(user_id)
+                from core.models import LoginUser
+                user = LoginUser.query.get(user_id)
             except Exception as err:
                 current_app.logger.error(err)
         g.user = user

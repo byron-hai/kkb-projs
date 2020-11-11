@@ -5,6 +5,7 @@
 from core import db
 from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 class BaseModel(object):
@@ -19,6 +20,34 @@ class BaseModel(object):
             db.session.rollback()
             return str(err)
 
+
+class LoginUser(BaseModel, db.Model):
+    __tablename__ = 'users_login'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    mobile = db.Column(db.String(20), unique=True, nullable=False)
+    nickname = db.Column(db.String(50))
+    _password_hash = db.Column(db.String(128), nullable=False)
+    last_login = db.Column(db.DateTime, default=datetime.now)
+
+    def __init__(self, mobile, nickname, password):
+        self.mobile = mobile
+        self.nickname = nickname
+        self._password_hash = generate_password_hash(password)
+
+    def set_password(self, value):
+        self._password_hash = generate_password_hash(value)
+
+    def check_password(self, password):
+        return check_password_hash(self._password_hash, password)
+
+    def to_dict(self):
+        data_dict = {
+            'id': self.id,
+            'nickname': self.nickname,
+            'mobile': self.mobile,
+            'last_login': self.last_login
+        }
+        return data_dict
 
 class User(BaseModel, db.Model):
     __tablename__ = 'users'

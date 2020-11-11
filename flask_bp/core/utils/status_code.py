@@ -20,6 +20,14 @@ class ResponseCode(object):
         return {'code': 201, 'msg': 'update success', 'data': data}
 
     @property
+    def register_params_not_fill(self):
+        return {'code': 1006, 'msg': 'mobile and password is must for register'}
+
+    @property
+    def register_mobile_format_error(self):
+        return {'code': 1008, 'msg': 'mobile format error'}
+
+    @property
     def login_info_error(self):
         return {'code': 1001, 'msg': 'username or password error'}
 

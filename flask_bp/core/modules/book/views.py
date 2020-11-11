@@ -3,14 +3,14 @@
 # @Author: byron
 # @Date: 11/5/20
 from flask import request, redirect, jsonify
-from core.modules.book import book_blu
+from core.modules.book import book_bp
 from core.models import Book
 from core import db
 from core.utils.common import login_check
 from core.utils.status_code import response_code
 
 
-@book_blu.route('/')
+@book_bp.route('/')
 def get_books():
     books = Book.query.all()
     if books:
@@ -20,7 +20,7 @@ def get_books():
     return jsonify(code='-1', msg="No records found")
 
 
-@book_blu.route('/book/<int:book_id>')
+@book_bp.route('/book/<int:book_id>')
 def get_book(book_id):
     book = Book.query.get(book_id)
     if book:
@@ -28,7 +28,7 @@ def get_book(book_id):
     return jsonify({'code': '-1', 'msg': 'No records found'})
 
 
-@book_blu.route('/book', methods=['POST'])
+@book_bp.route('/book', methods=['POST'])
 # @login_check
 def add():
     data = request.json
@@ -52,7 +52,7 @@ def add():
 
 
 # Update
-@book_blu.route('/book/<int:book_id>', methods=['PATCH'])
+@book_bp.route('/book/<int:book_id>', methods=['PATCH'])
 # @login_check
 def update(book_id):
     data = request.json
@@ -78,7 +78,7 @@ def update(book_id):
 
 
 # Delete
-@book_blu.route('/book/<book_id>', methods=['DELETE'])
+@book_bp.route('/book/<book_id>', methods=['DELETE'])
 # @login_check
 def delete(book_id):
     book = Book.query.get(book_id)

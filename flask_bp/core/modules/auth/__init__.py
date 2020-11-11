@@ -5,5 +5,5 @@
 
 from flask import Blueprint
 
-auth_blu = Blueprint('auth', __name__, url_prefix="/passport")
+auth_bp = Blueprint('auth', __name__, url_prefix="/passport")
 from. import views
