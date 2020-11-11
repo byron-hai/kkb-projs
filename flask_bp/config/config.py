@@ -32,13 +32,13 @@ class Config(object):
     SWAGGER_HOST = "localhost:5000"
 
     REDIS_HOST = '127.0.0.1'
-    REDIS_PORT = 6379
+    REDIS_PORT = '6379'
 
-    SESSION_TYPE = "filesystem"
-    # SESSION_TYPE = "redis"  # assign session stored in redis
-    # SESSION_USE_SINGER = True  # make session_id in cookie encrypted
-    # SESSION_REDIS = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT)
-    # PERMANENT_SESSION_LIFETIME = 24 * 60 * 60  # session lifetime 24 hours
+    # SESSION_TYPE = "filesystem"
+    SESSION_TYPE = "redis"  # assign session stored in redis
+    SESSION_USE_SINGER = True  # make session_id in cookie encrypted
+    SESSION_REDIS = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT)
+    PERMANENT_SESSION_LIFETIME = 24 * 60 * 60  # session lifetime 24 hours
 
     LOG_LEVEL = logging.DEBUG
 

@@ -85,3 +85,15 @@ def login():
         return jsonify(status['-3'])
     else:
         return jsonify(response_code.login_info_error)
+
+
+@passport_bp.route('/logout', methods=['POST'])
+def logout():
+    """
+    logout
+    method: POST
+    :return: code, msg
+    """
+    session.pop("user_id", "")
+    session.pop("mobile", "")
+    return jsonify(response_code.success)

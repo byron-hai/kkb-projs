@@ -51,5 +51,9 @@ class ResponseCode(object):
     def get_data_fail(self):
         return {'code': 1014, 'msg': 'Get data failed'}
 
+    @property
+    def check_data_error(self):
+        return {'code': 1016, 'msg': 'check data error'}
+
 
 response_code = ResponseCode()

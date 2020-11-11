@@ -6,7 +6,7 @@ from flask import request, redirect, jsonify
 from core.modules.book import book_bp
 from core.models import Book
 from core import db
-from core.utils.common import login_check
+from core.utils.common import login_session_check, login_token_check
 from core.utils.status_code import response_code
 
 
@@ -29,7 +29,7 @@ def get_book(book_id):
 
 
 @book_bp.route('/book', methods=['POST'])
-# @login_check
+@login_session_check
 def add():
     data = request.json
     name = data.get('name')
@@ -53,7 +53,7 @@ def add():
 
 # Update
 @book_bp.route('/book/<int:book_id>', methods=['PATCH'])
-# @login_check
+@login_session_check
 def update(book_id):
     data = request.json
     name = data.get('name')
@@ -79,7 +79,7 @@ def update(book_id):
 
 # Delete
 @book_bp.route('/book/<book_id>', methods=['DELETE'])
-# @login_check
+@login_session_check
 def delete(book_id):
     book = Book.query.get(book_id)
     if book:

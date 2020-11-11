@@ -10,11 +10,11 @@ from werkzeug.routing import BaseConverter
 
 class RegexConverter(BaseConverter):
     def __init__(self, url_map, *args):
-        super(RegexConverter, self).__init__(url_map)
+        super().__init__(url_map)
         self.regex = args[0]
 
     def to_python(self, value):
-        return int(value) + 1
+        return value
 
     def to_url(self, value):
         return super(RegexConverter, self).to_url(value)
@@ -22,5 +22,5 @@ class RegexConverter(BaseConverter):
 
 class MobileConverter(BaseConverter):
     def __init__(self, url_map, *args):
-        super(MobileConverter, self).__init__(url_map)
-        self.regex = args[0]
+        super().__init__(url_map)
+        self.regex = r'1[35678]\d{9}'

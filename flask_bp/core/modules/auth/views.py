@@ -6,7 +6,7 @@ from flask import request, jsonify
 from core.modules.auth import auth_bp
 from core.models import User
 from core import db
-from core.utils.common import login_check
+from core.utils.common import login_session_check
 from core.utils.status_code import response_code
 
 

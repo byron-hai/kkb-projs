@@ -6,7 +6,7 @@
 from flask import request, jsonify
 from core.modules.index import index_bp
 from core.models import Book, LoginUser
-from core.utils.common import login_check
+from core.utils.common import login_session_check, login_token_check
 from core.utils.status_code import response_code
 
 
@@ -20,7 +20,7 @@ def index():
 
 
 @index_bp.route('/users')
-@login_check
+@login_session_check
 def get_users():
     users = LoginUser.query.all()
     if not users:
