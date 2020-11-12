@@ -32,6 +32,10 @@ class ResponseCode(object):
         return {'code': 1001, 'msg': 'username or password error'}
 
     @property
+    def login_check_error(self):
+        return {'code': 1001, 'msg': 'Login and try again'}
+
+    @property
     def user_not_exist(self):
         return {'code': 1007, 'msg': 'user not existed'}
 

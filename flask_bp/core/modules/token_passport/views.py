@@ -23,7 +23,7 @@ def register():
         return jsonify(response_code.register_params_not_fill)
 
     # https://www.cnblogs.com/SuperLee017/p/9544101.html
-    if not re.match('1[356789]\\d{9}', mobile):
+    if not re.match("1[356789]\d{9}", mobile):
         return jsonify(response_code.register_mobile_format_error)
     user = LoginUser(mobile=mobile, nickname=nickname, password=password)
     user_exist = LoginUser.query.filter_by(mobile=mobile).first()
@@ -78,34 +78,34 @@ def login():
         if not user.check_password(password):
             return jsonify(response_code.login_info_error)
 
-        # Generate token
-        m = hashlib.md5()
-        m.update(mobile.encode("utf-8"))
-        m.update(password.encode("utf-8"))
-        m.update(str(int(time.time())).encode("utf-8"))
-        token = m.hexdigest()
+    # Generate token
+    m = hashlib.md5()
+    m.update(mobile.encode("utf-8"))
+    m.update(password.encode("utf-8"))
+    m.update(str(int(time.time())).encode("utf-8"))
+    token = m.hexdigest()
 
-        user_id = user.id
-        user_data = {
-            "user_id": user_id,
-            "mobile": user.mobile,
-            "token": token
-        }
+    user_id = user.id
+    user_data = {
+        "user_id": user_id,
+        "mobile": user.mobile,
+        "token": token
+    }
 
-        try:
-            pipeline = redis_store.pipeline()
-            pipeline.hmset("user:%s" % user_id, user_data)
-            pipeline.set("token:%s" % token, user_id)
-            pipeline.expire("token:%s" % token, constants.LOGIN_INFO_REDIS_EXPIRES)
-            pipeline.execute()
-        except Exception as e:
-            current_app.logger.error(e)
+    try:
+        pipeline = redis_store.pipeline()
+        pipeline.hmset("user:%s" % user_id, user_data)
+        pipeline.set("token:%s" % token, user_id)
+        pipeline.expire("token:%s" % token, constants.LOGIN_INFO_REDIS_EXPIRES)
+        pipeline.execute()
+    except Exception as e:
+        current_app.logger.error(e)
 
-        user.last_login = datetime.now()
-        user.session_commit()
-        response_dict = response_code.success
-        response_dict['token'] = token
-        return jsonify(response_dict)
+    user.last_login = datetime.now()
+    user.session_commit()
+    response_dict = response_code.success
+    response_dict['token'] = token
+    return jsonify(response_dict)
 
 
 @token_passport_bp.route('/logout', methods=['POST'])
@@ -124,4 +124,3 @@ def logout():
         current_app.logger.error(e)
 
     return jsonify(response_code.success)
-

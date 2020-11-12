@@ -11,6 +11,7 @@ from core.utils.converter import RegexConverter, MobileConverter
 from config.config import Config, configs
 from redis import StrictRedis
 from core.utils import constants
+from core.utils.log_utils import setup_log
 
 db = SQLAlchemy()
 redis_store = None
@@ -18,6 +19,7 @@ redis_store = None
 
 def create_app(config_name):
     config = configs[config_name]
+    setup_log(config_name)
     app = Flask(__name__)
     app.config.from_object(config)
     app.url_map.converters['re'] = RegexConverter
@@ -64,6 +66,9 @@ def create_app(config_name):
 
     from core.modules.passport import passport_bp
     app.register_blueprint(passport_bp)
+
+    from core.modules.token_passport import token_passport_bp
+    app.register_blueprint(token_passport_bp)
 
     from core.modules.index import index_bp
     app.register_blueprint(index_bp)

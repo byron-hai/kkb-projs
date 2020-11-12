@@ -20,7 +20,7 @@ def index():
 
 
 @index_bp.route('/users')
-@login_session_check
+@login_token_check
 def get_users():
     users = LoginUser.query.all()
     if not users:

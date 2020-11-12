@@ -32,13 +32,13 @@ def login_session_check(func):
 def login_token_check(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        token = request.header.get("token")
+        token = request.headers.get("token")
         if not token:
             return jsonify(response_code.user_not_exist)
 
         user_id = redis_store.get('token:%s' % token)
         if not user_id or token != redis_store.hget("user:%s" % user_id, 'token'):
-            return jsonify(response_code.check_data_error)
+            return jsonify(response_code.login_check_error)
 
         return func(*args, **kwargs)
     return wrapper

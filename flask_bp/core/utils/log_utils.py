@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# @File: logs_utils.py
+# @File: log_utils.py
 # @Author: byron
 # @Date: 11/11/20
 import logging

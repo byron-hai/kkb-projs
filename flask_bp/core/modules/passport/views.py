@@ -20,7 +20,7 @@ def register():
         return jsonify(response_code.register_params_not_fill)
 
     # https://www.cnblogs.com/SuperLee017/p/9544101.html
-    if not re.match('1[356789]\\d{9}', mobile):
+    if not re.match('1[356789]\d{9}', mobile):
         return jsonify(response_code.register_mobile_format_error)
     user = LoginUser(mobile=mobile, nickname=nickname, password=password)
     user_exist = LoginUser.query.filter_by(mobile=mobile).first()
